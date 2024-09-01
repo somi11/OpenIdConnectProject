@@ -33,7 +33,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             NameClaimType = "given_name",
             RoleClaimType = "role",
-            ValidTypes = new[] { "at+jwt" }
+            ValidTypes = new[] { "at+jwt" }  
 
         };
 
