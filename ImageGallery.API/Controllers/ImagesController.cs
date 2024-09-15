@@ -3,6 +3,7 @@ using ImageGallery.API.Services;
 using ImageGallery.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace ImageGallery.API.Controllers
 {
@@ -31,19 +32,39 @@ namespace ImageGallery.API.Controllers
         [HttpGet()]
         public async Task<ActionResult<IEnumerable<Image>>> GetImages()
         {
+            var OwnerId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+
+            Console.WriteLine(User.Claims);
+
+            if(OwnerId == null)
+            {
+                throw new Exception("sub claim does not exist");
+            }
+
             // get from repo
-            var imagesFromRepo = await _galleryRepository.GetImagesAsync();
+
+            var imagesFromRepo = await _galleryRepository.GetImagesAsync(OwnerId);
 
             // map to model
             var imagesToReturn = _mapper.Map<IEnumerable<Image>>(imagesFromRepo);
 
+            var userClaimBuilder = new StringBuilder();
+
+            foreach (var claim in User.Claims)
+            {
+                userClaimBuilder.AppendLine($"Claim Type : {claim.Type} : Claim Value : {claim.Value}");
+            }
+            Console.WriteLine(userClaimBuilder.ToString());
             // return
             return Ok(imagesToReturn);
         }
 
         [HttpGet("{id}", Name = "GetImage")]
+        [Authorize ("mustOwnImage")]
         public async Task<ActionResult<Image>> GetImage(Guid id)
-        {          
+        {
+           
+
             var imageFromRepo = await _galleryRepository.GetImageAsync(id);
 
             if (imageFromRepo == null)
@@ -56,7 +77,12 @@ namespace ImageGallery.API.Controllers
             return Ok(imageToReturn);
         }
 
+        // ...
+
         [HttpPost()]
+        //[Authorize (Roles = "PayingUser")]
+        [Authorize(Policy = "CanAddImage")]
+        [Authorize(Policy = "clientApplicationCanWrite")]
         public async Task<ActionResult<Image>> CreateImage([FromBody] ImageForCreation imageForCreation)
         {
             // Automapper maps only the Title in our configuration
@@ -71,7 +97,7 @@ namespace ImageGallery.API.Controllers
 
             // create the filename
             string fileName = Guid.NewGuid().ToString() + ".jpg";
-            
+
             // the full file path
             var filePath = Path.Combine($"{webRootPath}/images/{fileName}");
 
@@ -84,20 +110,28 @@ namespace ImageGallery.API.Controllers
             // ownerId should be set - can't save image in starter solution, will
             // be fixed during the course
             //imageEntity.OwnerId = ...;
+            var ownerId = User.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+            if (ownerId == null)
+            {
+                throw new Exception("sub claim does not exist");
 
+            }
+            Console.WriteLine(ownerId);
+            imageEntity.OwnerId = ownerId;
             // add and save.  
             _galleryRepository.AddImage(imageEntity);
 
             await _galleryRepository.SaveChangesAsync();
 
             var imageToReturn = _mapper.Map<Image>(imageEntity);
-
+        
             return CreatedAtRoute("GetImage",
                 new { id = imageToReturn.Id },
                 imageToReturn);
         }
 
         [HttpDelete("{id}")]
+        [Authorize("mustOwnImage")]
         public async Task<IActionResult> DeleteImage(Guid id)
         {            
             var imageFromRepo = await _galleryRepository.GetImageAsync(id);
@@ -115,6 +149,7 @@ namespace ImageGallery.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize("mustOwnImage")]
         public async Task<IActionResult> UpdateImage(Guid id, 
             [FromBody] ImageForUpdate imageForUpdate)
         {

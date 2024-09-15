@@ -1,6 +1,8 @@
 ﻿using ImageGallery.Client.ViewModels;
 using ImageGallery.Model;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -21,11 +23,13 @@ namespace ImageGallery.Client.Controllers
             _httpClientFactory = httpClientFactory ??
                 throw new ArgumentNullException(nameof(httpClientFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+
         }
 
         public async Task<IActionResult> Index()
         {
-             await LogIdentityInformation();
+            await LogIdentityInformation();
             var httpClient = _httpClientFactory.CreateClient("APIClient");
 
             var request = new HttpRequestMessage(
@@ -128,7 +132,9 @@ namespace ImageGallery.Client.Controllers
             return RedirectToAction("Index");
         }
 
-        [Authorize (Roles = "PayingUser")]
+        //[Authorize (Roles = "PayingUser")]
+        [Authorize (Policy = "CanAddImage")]
+        [HttpGet]
         public IActionResult AddImage()
         {
             return View();
@@ -136,7 +142,8 @@ namespace ImageGallery.Client.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "PayingUser")]
+        //[Authorize(Roles = "PayingUser")]
+       [Authorize(Policy = "CanAddImage")]
         public async Task<IActionResult> AddImage(AddImageViewModel addImageViewModel)
         {
             if (!ModelState.IsValid)
@@ -189,15 +196,18 @@ namespace ImageGallery.Client.Controllers
             //get the saved identity token
             var identityToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.IdToken);
             var accessToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.AccessToken);
-
+            var refreshToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.RefreshToken);
             var userClaimBuilder = new StringBuilder();
 
-            foreach(var claim in User.Claims)
+            foreach (var claim in User.Claims)
             {
                 userClaimBuilder.AppendLine($"Claim Type : {claim.Type} : Claim Value : {claim.Value}");
-            }
-            _logger.LogInformation($"Identity Token , Access Token & user claims are : {identityToken} \n {accessToken} \n {userClaimBuilder}");
 
+                _logger.LogInformation($"Identity Token , user claims are : {identityToken} \n {userClaimBuilder}");
+                _logger.LogInformation($"Access Token : {accessToken}");
+                _logger.LogInformation($"Refresh Token : {refreshToken}");
+
+            }
         }
     }
 }

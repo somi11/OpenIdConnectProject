@@ -21,27 +21,30 @@ public static class TestUsers
             {
                 new TestUser
                 {
-                    SubjectId = "d860efca",
+                    
+                    SubjectId = "d860efca-22d9-47fd-8249-791ba61b07c7",
                     Username = "David",
                     Password = "password",
                     Claims =
                     {
-                        new Claim("role" , "FreeUser"),
                         new Claim(JwtClaimTypes.GivenName, "David"),
                         new Claim(JwtClaimTypes.FamilyName, "Smith"),
+                        new Claim("role" , "FreeUser"),
+                        new Claim("country", "nl")
                         
                     }
                 },
                 new TestUser
-                {
-                    SubjectId = "afsdefsa",
+                {     
+                    SubjectId = "b7539694-97e7-4dfe-84da-b4256e1ff5c7",
                     Username = "Emma",
                     Password = "password",
                     Claims =
                     {  
-                        new Claim("role" , "PayingUser"),
                         new Claim(JwtClaimTypes.GivenName, "Emma"),
                         new Claim(JwtClaimTypes.FamilyName, "Smith"),
+                        new Claim("role" , "PayingUser"),
+                        new Claim("country", "be")
                     }
                 }
             };

@@ -1,5 +1,7 @@
+using Cmos.IDP.DbContexts;
 using Serilog;
-
+using Microsoft.EntityFrameworkCore;
+using Cmos.IDP.Services;
 namespace Cmos.IDP;
 
 internal static class HostingExtensions
@@ -9,16 +11,27 @@ internal static class HostingExtensions
         // uncomment if you want to add a UI
         builder.Services.AddRazorPages();
 
+        builder.Services.AddScoped<ILocalUserService, LocalUserService>();
+
+        //adding db
+        builder.Services.AddDbContext<IdentityDbContext>(option =>
+        {
+            option.UseSqlite(
+                builder.Configuration.GetConnectionString("DefaultConnection")
+                );
+        });
+
         builder.Services.AddIdentityServer(options =>
             {
                 // https://docs.duendesoftware.com/identityserver/v6/fundamentals/resources/api_scopes#authorization-based-on-scopes
                 options.EmitStaticAudienceClaim = true;
             })
+            .AddProfileService<LocalUserProfileService>()
             .AddInMemoryIdentityResources(Config.IdentityResources)
             .AddInMemoryApiScopes(Config.ApiScopes)
             .AddInMemoryApiResources(Config.ApiResources)
-            .AddInMemoryClients(Config.Clients)
-            .AddTestUsers(TestUsers.Users);
+            .AddInMemoryClients(Config.Clients);
+            //.AddTestUsers(TestUsers.Users);
 
         return builder.Build();
     }
