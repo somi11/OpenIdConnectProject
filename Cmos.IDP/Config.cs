@@ -44,7 +44,7 @@ public static class Config
                     ClientName = "CMOSClient",
                     ClientId = "cmos",
                     AllowedGrantTypes = GrantTypes.Code,
-                    AccessTokenType = AccessTokenType.Reference,
+                    AccessTokenType = AccessTokenType.Jwt,
                     AllowOfflineAccess = true,
                     UpdateAccessTokenClaimsOnRefresh =true, // to refresth claims of a user
                     AccessTokenLifetime = 120,
@@ -61,7 +61,7 @@ public static class Config
                         "cmosApi.write",
                         "country" },
                     ClientSecrets = { new Secret("secret".Sha256()) },
-                    RequireConsent = true,
+                   // RequireConsent = true,
 
                 }
             };

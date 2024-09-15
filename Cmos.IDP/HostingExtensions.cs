@@ -2,6 +2,8 @@ using Cmos.IDP.DbContexts;
 using Serilog;
 using Microsoft.EntityFrameworkCore;
 using Cmos.IDP.Services;
+using Microsoft.AspNetCore.Identity;
+using DnsClient;
 namespace Cmos.IDP;
 
 internal static class HostingExtensions
@@ -10,6 +12,10 @@ internal static class HostingExtensions
     {
         // uncomment if you want to add a UI
         builder.Services.AddRazorPages();
+        builder.Services.AddSingleton<ILookupClient>(new LookupClient());
+        builder.Services.AddSingleton<EmailService>();
+
+        builder.Services.AddScoped<IPasswordHasher<Entities.User>, PasswordHasher<Entities.User>>();
 
         builder.Services.AddScoped<ILocalUserService, LocalUserService>();
 

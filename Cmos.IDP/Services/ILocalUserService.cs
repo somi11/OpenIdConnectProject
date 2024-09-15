@@ -18,11 +18,12 @@ namespace Cmos.IDP.Services
             string subject);
 
         void AddUser
-            (User userToAdd);
+            (User userToAdd , string password);
 
         Task<bool> IsUserActive(
             string subject);
 
         Task<bool> SaveChangesAsync();
+        Task<bool> ActivateUserAsync(string securityCode);
     }
 }
