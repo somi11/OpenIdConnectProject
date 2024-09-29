@@ -4,3 +4,4 @@
 ### Image Gallery MVC Client App
 ### ASPNET CORE Image Gallery API 
 ### Image Gallery Model library
+### Authorization library 
